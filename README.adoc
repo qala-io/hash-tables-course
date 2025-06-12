@@ -1,0 +1,109 @@
+= Hash Tables (TBD)
+
+This material can be used to study Hash Tables extensively. You'll compare 2 popular approaches 
+(separate collections vs probing), as well as different mathematics and optimisation tricks used in different
+platforms (Java, Python, Go).
+
+Why study this:
+
+- First, Hash Tables are everywhere. Studying data structures will allow you to easily understand other tools
+like databases, message brokers, etc.
+- Digging deeply teaches you software _engineering_ - you're getting exposed to Computer Science, Math and smart
+engineering solutions. This allows you to solve complicated problems.
+
+== Programme
+
+Whatever you see here - you need to practice. Just reading/watching the material won't work.
+
+If you don't know anything about data structures, warm up with more primitive ones: check out first 3 from
+https://www.coursera.org/learn/algorithms-part1/home/module/4[Algorithms I by Sedgewick].
+
+=== Classical Hash Tables
+
+Go through https://www.coursera.org/learn/algorithms-part1/home/module/12[Hash Tables in Algorithms I].
+Implement both flavors: the one with the external chaining (Linked List) and the Linear Probing.
+
+The name "Open address" is https://stackoverflow.com/questions/36037842/what-is-meant-by-open-addressing-in-collision-handling[murky],
+so we'll be referencing to them as Probing hash tables, which describes the implementation more clearly.
+
+=== Bit hacks
+
+Practice https://www.youtube.com/watch?v=ZusiKXcz_ac&list=PLUl4u3cNGP63VIBQVWguXxZZi0566y7Wf&index=3[Bit Hacks].
+You may want to stop here for a week or two for the new info to settle in.
+
+=== Java HashTable
+
+==== Remainders in binary
+
+Java HashTable employs an optimization to calculate remainders: it does this in binary. This is the reason why the
+number of buckets is always $2^n$.
+
+First, recognize what left and right shifts do in decimal (multiplication/division by 10). Now, notice that in
+binary the operations are equivalent, except it divides and multiplies by 2.
+
+Now, think about how to calculate remainders in decimal:
+
+[source,math]
+----
+\begin{align*}
+& 819123 \mod 10   \\
+& 819123 \mod 100  \\
+& 819123 \mod 1000 \\
+& 819123 \mod 10000
+\end{align*}
+----
+
+
+What would it take to do the same in binary? Add another implementation of Hash Table (with external chaining), where
+the number of buckets grows as powers of two. This allows implementing mod operation using bit hacks - with shifts.
+Add a new implementation of Hash Table with external chaining that does this.
+
+==== Smarter external collections
+
+Who says that buckets must be represented exclusively by Linked Lists? Java's HashTable has another optimization:
+if the number of elements in the bucket is >8, then it builds a binary tree. This drops the number of operations
+within the bucket from $\theta(N)$ to $\theta(log N)$.
+
+=== Java IdentityHashTable
+
+Probing often requires a tomb-stone. Which is a complication of itself. What if instead we keep it simple - if an
+element is removed, we shift the collisions down? It's such a simple and elegant solution!
+
+=== Python dict
+
+Linear probing is extremely susceptible to collisions. That's why the load factor is often as low as 50%. What if it's
+not linear? Study Python's tricks to resolve collisions.
+
+=== Go swisstable
+
+Modern CPUs allow running multiple operations at the same time - given that the operations are similar. For instance,
+we can check 8 values at a time whether they are equal to some given value.
+
+Implement Linear Probing that checks 8 hash codes at a time.
+
+=== Hashing and collisions
+
+Hashing isn't perfect - you can always craft values that end up in the same bucket. E.g. try putting float values
+1.0, 2.0, 3.0 into Java's HashMap. They all will end up in the same bucket. Why? Because in such cases the lowest
+bits are always 0.
+
+If we know the use cases (which values we're going to keep), then we can tailor the hashing function to it. But
+generic implementations like those in standard libraries can't afford tailoring to a specific use case. They try
+to use a function that gives the fewer collisions on average.
+
+The most interesting problem though is hashing Strings/byte arrays. What makes it complicated is that the byte arrays
+are long, and we need bits both from any part of the array to have an impact on the final hash.
+
+==== Polynomial hashing
+
+A good explanation on this topic is in https://www.coursera.org/learn/algorithms-part2/lecture/3KiqT/rabin-karp[Rabin-Karp substring searching] lecture from Sedgewick.
+
+Notice, that in Java String.hashCode() the mod operation isn't actually used - the values are simply allowed to
+overflow. Mathematically this is bad as this is a wacky operation that's hard to explain. However, the alternative
+is to $\mod 2^{15}$ (because $2^{16} \times 2^{16}$ overflows) which gives us too few possible values and increases the
+collision.
+
+==== Rabin fingerprint
+
+Python employs a simpler approach: Rabin fingerprint, which requires more math to learn, but its implementation is
+quite simple, and it won't ever overflow.
